@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { MdSearch } from "react-icons/md";
 import { FaTrash, FaPen } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import SidebarAdmin from "../global/SidebarAdmin";
 import TopbarAdmin from "../global/TopbarAdmin";
 import Subject from "../../components/Subject";
+import AddStudent from "../../components/AddStudent";
 import { db } from "../../firebaseConfig";
-import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, doc, deleteDoc, setDoc } from "firebase/firestore";
 
 const SubjectManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubjectOpen, setIsSubjectOpen] = useState(false);
   const [subjects, setSubjects] = useState([]);
+  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingData, setEditingData] = useState(null);
   const [selectedProgram, setSelectedProgram] = useState("All Programs");
+  const [pendingSubject, setPendingSubject] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "subjectList"), (snapshot) => {
@@ -43,8 +47,38 @@ const SubjectManagement = () => {
 
   const handleSubjectSubmit = (data) => {
     setIsSubjectOpen(false);
+    const isEditing = editingIndex !== null;
     setEditingIndex(null);
     setEditingData(null);
+
+    if (!isEditing) {
+      const subjectID = data.subjectCode;
+      setPendingSubject({ ...data, id: subjectID });
+      setIsAddStudentOpen(true);
+    } else {
+      const subjectID = data.subjectCode;
+      setDoc(doc(db, "subjectList", subjectID), data, { merge: true });
+    }
+  };
+
+  const handleAddStudent = async (studentData) => {
+    setIsAddStudentOpen(false);
+    if (!studentData || !studentData.id) {
+      setPendingSubject(null);
+      return;
+    }
+
+    if (pendingSubject) {
+      const subjectID = pendingSubject.id;
+      await setDoc(doc(db, "subjectList", subjectID), pendingSubject);
+      await setDoc(doc(db, "subjectList", subjectID, "students", studentData.id), { id: studentData.id });
+      setPendingSubject(null);
+    }
+  };
+
+  const handleCancelStudent = () => {
+    setIsAddStudentOpen(false);
+    setPendingSubject(null);
   };
 
   const handleEdit = (index) => {
@@ -126,7 +160,14 @@ const SubjectManagement = () => {
                 {filteredSubjects.map((subj, index) => (
                   <tr key={index} className="text-center">
                     <td className="py-2 px-4 border">{subj.program}</td>
-                    <td className="py-2 px-4 border">{subj.subject}</td>
+                    <td className="py-2 px-4 border">
+                      <Link
+                        to={`/admin/subjects/${subj.id}`}
+                        className="text-blue hover:underline"
+                      >
+                        {subj.subject}
+                      </Link>
+                    </td>
                     <td className="py-2 px-4 border">{subj.subjectCode}</td>
                     <td className="py-2 px-4 border">{subj.yearLevel}</td>
                     <td className="py-2 px-4 border">
@@ -160,6 +201,14 @@ const SubjectManagement = () => {
             onClose={handleCloseSubject}
             onSubmit={handleSubjectSubmit}
             initialData={editingData}
+          />
+          <AddStudent
+            visible={isAddStudentOpen}
+            onClose={handleCancelStudent}
+            onAdd={handleAddStudent}
+            initialData={null}
+            hideCancel={false}
+            subjectID={pendingSubject?.id}
           />
         </div>
       </div>

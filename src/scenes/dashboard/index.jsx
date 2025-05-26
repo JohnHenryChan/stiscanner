@@ -20,7 +20,10 @@ const Dashboard = () => {
     ? students.filter(s => s.date === formatDate(selectedDate))
     : students;
 
-  const todayActivity = filteredStudents.map(s => ({ label: s.name, time: `${s.timeIn} - ${s.timeOut}` }));
+  const todayActivity = filteredStudents.map(s => ({
+    label: s.name,
+    time: `${s.timeIn} - ${s.timeOut}`
+  }));
 
   const total = filteredStudents.length;
   const bscs = filteredStudents.filter(s => s.program.toLowerCase().includes("bscs")).length;
@@ -28,7 +31,6 @@ const Dashboard = () => {
 
   const bscsPercent = total > 0 ? Math.round((bscs / total) * 100) : 0;
   const hrsPercent = total > 0 ? Math.round((hrs / total) * 100) : 0;
-  const overallPercent = Math.min(bscsPercent + hrsPercent, 100);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -72,39 +74,48 @@ const Dashboard = () => {
             </div>
 
             {/* Statistics */}
-            <div className="bg-white border rounded-md p-4 col-span-2">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 items-center">
+            <div className="bg-white border rounded-md p-6 col-span-2">
+              <div className="grid grid-cols-2 gap-10 justify-center items-center">
                 <div className="flex flex-col items-center">
-                  <CircularProgressbar
-                    value={bscsPercent}
-                    text={`${bscsPercent}%`}
-                    styles={buildStyles({
-                      textColor: "#333",
-                      pathColor: "#3b82f6",
-                      trailColor: "#e5e7eb",
-                    })}
-                  />
-                  <p className="mt-2">BSCS</p>
-                </div>
-                <div className="flex flex-col items-center">
-                  <CircularProgressbar
-                    value={hrsPercent}
-                    text={`${hrsPercent}%`}
-                    styles={buildStyles({
-                      textColor: "#333",
-                      pathColor: "#f59e0b",
-                      trailColor: "#e5e7eb",
-                    })}
-                  />
-                  <p className="mt-2">HRS</p>
-                </div>
-                <div className="col-span-2 md:col-span-1">
-                  <p className="mb-2">Overall</p>
-                  <div className="relative w-full h-4 bg-white border">
-                    <div className="absolute top-0 left-0 h-4 bg-green-600" style={{ width: `${overallPercent}%` }} />
-                    <span className="absolute right-0 -top-5 text-xs">{overallPercent}%</span>
+                  <div className="w-36 h-36">
+                    <CircularProgressbar
+                      value={bscsPercent}
+                      text={`${bscsPercent}%`}
+                      styles={buildStyles({
+                        textColor: "#3b82f6",
+                        pathColor: "#3b82f6",
+                        trailColor: "#e5e7eb",
+                        textSize: "18px",
+                      })}
+                    />
                   </div>
+                  <div className="mt-3 text-base font-semibold text-blue-600">BSCS</div>
                 </div>
+
+                <div className="flex flex-col items-center">
+                  <div className="w-36 h-36">
+                    <CircularProgressbar
+                      value={hrsPercent}
+                      text={`${hrsPercent}%`}
+                      styles={buildStyles({
+                        textColor: "#f59e0b",
+                        pathColor: "#f59e0b",
+                        trailColor: "#e5e7eb",
+                        textSize: "18px",
+                      })}
+                    />
+                  </div>
+                  <div className="mt-3 text-base font-semibold text-yellow-600">HRS</div>
+                </div>
+              </div>
+
+              {/* Overall Summary */}
+              <div className="text-center mt-6 text-sm text-gray-700">
+                <p>
+                  <span className="font-semibold">Total Students:</span> {total} &nbsp;|&nbsp;
+                  <span className="text-blue-600 font-semibold">BSCS:</span> {bscs} &nbsp;|&nbsp;
+                  <span className="text-yellow-600 font-semibold">HRS:</span> {hrs}
+                </p>
               </div>
             </div>
           </div>

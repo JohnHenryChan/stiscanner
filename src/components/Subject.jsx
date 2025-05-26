@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { collection, setDoc, doc, getDoc, deleteDoc } from "firebase/firestore";
+import { collection, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig.js";
 
 const Subject = ({ visible, onClose, onSubmit, initialData }) => {
@@ -10,63 +10,10 @@ const Subject = ({ visible, onClose, onSubmit, initialData }) => {
     yearLevel: "",
   });
 
-  const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const docSub = collection(db, "subjectList");
-  const subRef = formData.subjectCode;
-
-  async function addOrUpdateSubject() {
-    try {
-      if (!subRef) {
-        setErrorMessage("Subject code cannot be empty.");
-        return false;
-      }
-
-      if (initialData) {
-        const oldSubjectCode = initialData.subjectCode;
-        const newSubjectCode = subRef;
-
-        if (oldSubjectCode !== newSubjectCode) {
-          const newDocRef = doc(docSub, newSubjectCode);
-          const newDocSnap = await getDoc(newDocRef);
-
-          if (newDocSnap.exists()) {
-            setErrorMessage("Subject code already exists.");
-            return false;
-          }
 
 
-          await deleteDoc(doc(docSub, oldSubjectCode));
-          await setDoc(newDocRef, formData);
-          console.log("Subject updated with new subject code");
-          return true;
-        } else {
-
-          await setDoc(doc(docSub, oldSubjectCode), formData);
-          console.log("Subject updated successfully");
-          return true;
-        }
-      } else {
-
-        const docRef = doc(docSub, subRef);
-        const docCheck = await getDoc(docRef);
-
-        if (docCheck.exists()) {
-          setErrorMessage("Subject already exists.");
-          return false;
-        }
-
-        await setDoc(docRef, formData);
-        console.log("Subject added successfully");
-        return true;
-      }
-    } catch (e) {
-      console.error(e);
-      setErrorMessage(e.message || "An error occurred");
-      return false;
-    }
-  }
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (visible) {
@@ -99,14 +46,16 @@ const Subject = ({ visible, onClose, onSubmit, initialData }) => {
       return;
     }
 
-    setLoading(true);
-    const success = await addOrUpdateSubject();
-    setLoading(false);
+    const docRef = doc(docSub, subjectCode);
+    const docCheck = await getDoc(docRef);
 
-    if (success) {
-      onSubmit(formData);
-      onClose();
+    if (docCheck.exists()) {
+      setErrorMessage("Subject already exists.");
+      return;
     }
+
+    onSubmit(formData); // Pass form data to parent for deferred saving
+    onClose();
   };
 
   return (
@@ -158,16 +107,12 @@ const Subject = ({ visible, onClose, onSubmit, initialData }) => {
               type="button"
               onClick={onClose}
               className="bg-gray-600 text-white font-medium px-6 py-2 rounded-md hover:bg-gray-700"
-              disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className={`bg-blue-700 text-white font-medium px-6 py-2 rounded-md hover:bg-blue-800 ${
-                loading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className="bg-blue-700 text-white font-medium px-6 py-2 rounded-md hover:bg-blue-800"
             >
               {initialData ? "Update" : "Add"}
             </button>

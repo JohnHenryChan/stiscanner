@@ -2,16 +2,19 @@ import React, { useState } from "react";
 import SidebarAdmin from "../global/SidebarAdmin";
 import TopbarAdmin from "../global/TopbarAdmin";
 import { MdEdit, MdDelete, MdSearch } from "react-icons/md";
+import AddInstructor from "../../components/AddInstructor";
 import InstructorModal from "../../components/InstructorModal";
 
 const CoursesManagement = () => {
   const [showModal, setShowModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProgram, setSelectedProgram] = useState("All");
   const [editIndex, setEditIndex] = useState(null);
 
   const [instructors, setInstructors] = useState([
     {
+      idNumber: "CS123",
       name: "Jane Doe",
       startTime: "08:00",
       endTime: "10:00",
@@ -21,6 +24,7 @@ const CoursesManagement = () => {
       yearLevel: "2nd Year",
     },
     {
+      idNumber: "IT456",
       name: "John Smith",
       startTime: "10:30",
       endTime: "12:00",
@@ -41,6 +45,7 @@ const CoursesManagement = () => {
       setInstructors([...instructors, data]);
     }
     setShowModal(false);
+    setShowAssignModal(false);
   };
 
   const handleEdit = (index) => {
@@ -55,7 +60,7 @@ const CoursesManagement = () => {
   const programs = ["All", ...new Set(instructors.map((inst) => inst.program))];
 
   const filteredInstructors = instructors.filter((inst) => {
-    const matchesSearch = `${inst.name} ${inst.startTime} ${inst.endTime} ${inst.program} ${inst.course} ${inst.schedule} ${inst.yearLevel}`
+    const matchesSearch = `${inst.idNumber} ${inst.name} ${inst.startTime} ${inst.endTime} ${inst.program} ${inst.course} ${inst.schedule} ${inst.yearLevel}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
 
@@ -105,21 +110,34 @@ const CoursesManagement = () => {
                 ))}
               </select>
             </div>
-            <button
-              className="bg-[#0057A4] text-white px-4 py-2 rounded shadow"
-              onClick={() => {
-                setEditIndex(null);
-                setShowModal(true);
-              }}
-            >
-              Assign Instructor
-            </button>
+
+            <div className="flex gap-2">
+              <button
+                className="bg-[#0057A4] hover:bg-blue-900 text-white px-4 py-2 rounded shadow"
+                onClick={() => {
+                  setEditIndex(null);
+                  setShowModal(true);
+                }}
+              >
+                Add Instructor
+              </button>
+              <button
+                className="bg-[#0057A4] hover:bg-blue-900 text-white px-4 py-2 rounded shadow"
+                onClick={() => {
+                  setEditIndex(null);
+                  setShowAssignModal(true);
+                }}
+              >
+                Assign Instructor
+              </button>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full border text-center bg-white">
               <thead>
                 <tr className="bg-gray-200 text-black">
+                  <th className="border px-4 py-2">ID Number</th>
                   <th className="border px-4 py-2">Name</th>
                   <th className="border px-4 py-2">Time</th>
                   <th className="border px-4 py-2">Schedule</th>
@@ -131,6 +149,7 @@ const CoursesManagement = () => {
               <tbody>
                 {filteredInstructors.map((inst, index) => (
                   <tr key={index}>
+                    <td className="border px-4 py-2">{inst.idNumber || "—"}</td>
                     <td className="border px-4 py-2">{inst.name}</td>
                     <td className="border px-4 py-2">
                       {formatTime(inst.startTime)} – {formatTime(inst.endTime)}
@@ -160,7 +179,7 @@ const CoursesManagement = () => {
                 ))}
                 {filteredInstructors.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="py-4 text-gray-500">
+                    <td colSpan="7" className="py-4 text-gray-500">
                       No instructors found.
                     </td>
                   </tr>
@@ -171,17 +190,24 @@ const CoursesManagement = () => {
         </div>
       </div>
 
-      {showModal && (
-        <InstructorModal
-          visible={showModal}
-          onClose={() => {
-            setShowModal(false);
-            setEditIndex(null);
-          }}
-          onSubmit={handleAddInstructor}
-          initialData={editIndex !== null ? instructors[editIndex] : null}
-        />
-      )}
+      {/* Add Instructor Modal */}
+      <AddInstructor
+        visible={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setEditIndex(null);
+        }}
+        onSubmit={handleAddInstructor}
+        initialData={editIndex !== null ? instructors[editIndex] : null}
+      />
+
+      {/* Assign Instructor Modal */}
+      <InstructorModal
+        visible={showAssignModal}
+        onClose={() => setShowAssignModal(false)}
+        onSubmit={handleAddInstructor}
+        initialData={null}
+      />
     </div>
   );
 };

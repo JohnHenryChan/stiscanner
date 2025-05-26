@@ -6,15 +6,9 @@ const InstructorModal = ({ visible, onClose, onSubmit, initialData }) => {
   const [endTime, setEndTime] = useState("");
   const [program, setProgram] = useState("");
   const [course, setCourse] = useState("");
-  const [schedule, setSchedule] = useState([]);
   const [scheduleSort, setScheduleSort] = useState("");
   const [yearLevel, setYearLevel] = useState("");
   const [errors, setErrors] = useState({});
-
-  const [showAddProgram, setShowAddProgram] = useState(false);
-  const [showAddCourse, setShowAddCourse] = useState(false);
-  const [newProgramName, setNewProgramName] = useState("");
-  const [newCourseName, setNewCourseName] = useState("");
 
   const [programOptions, setProgramOptions] = useState([
     "Computer Science",
@@ -32,6 +26,12 @@ const InstructorModal = ({ visible, onClose, onSubmit, initialData }) => {
     "Business Management": ["Accounting", "Marketing", "Finance"],
   });
 
+  const nameOptions = [
+    "Ante Pasing",
+    "Ankol Bobot",
+    "Kara David",
+  ];
+
   useEffect(() => {
     if (initialData) {
       setName(initialData.name || "");
@@ -39,7 +39,6 @@ const InstructorModal = ({ visible, onClose, onSubmit, initialData }) => {
       setEndTime(initialData.endTime || "");
       setProgram(initialData.program || "");
       setCourse(initialData.course || "");
-      setSchedule(initialData.schedule || []);
       setScheduleSort(initialData.scheduleSort || "");
       setYearLevel(initialData.yearLevel || "");
     } else {
@@ -53,7 +52,6 @@ const InstructorModal = ({ visible, onClose, onSubmit, initialData }) => {
     setEndTime("");
     setProgram("");
     setCourse("");
-    setSchedule([]);
     setScheduleSort("");
     setYearLevel("");
     setErrors({});
@@ -66,8 +64,8 @@ const InstructorModal = ({ visible, onClose, onSubmit, initialData }) => {
     if (!endTime) newErrors.endTime = "End time is required.";
     if (!program.trim()) newErrors.program = "Program is required.";
     if (!course.trim()) newErrors.course = "Course is required.";
-    if (scheduleSort === "") newErrors.schedule = "Schedule is required.";
-    if (yearLevel === "") newErrors.yearLevel = "Year level is required.";
+    if (!scheduleSort) newErrors.scheduleSort = "Schedule is required.";
+    if (!yearLevel) newErrors.yearLevel = "Year level is required.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -80,101 +78,58 @@ const InstructorModal = ({ visible, onClose, onSubmit, initialData }) => {
       endTime,
       program,
       course,
-      schedule,
       scheduleSort,
       yearLevel,
     };
-    if (typeof onSubmit === "function") {
-      onSubmit(instructorData);
-    }
+    onSubmit(instructorData);
     resetForm();
-    onClose(); // Close modal after saving
-  };
-
-  const handleProgramChange = (value) => {
-    if (value === "add-edit") {
-      setShowAddProgram(true);
-    } else {
-      setProgram(value);
-      setCourse(""); // Reset course when program changes
-    }
-  };
-
-  const handleCourseChange = (value) => {
-    if (value === "add-edit") {
-      setShowAddCourse(true);
-    } else {
-      setCourse(value);
-    }
-  };
-
-  const handleAddProgram = () => {
-    const trimmed = newProgramName.trim();
-    if (trimmed && !programOptions.includes(trimmed)) {
-      setProgramOptions((prev) => [...prev, trimmed]);
-      setCourseOptions((prev) => ({ ...prev, [trimmed]: [] }));
-      setProgram(trimmed);
-    }
-    setShowAddProgram(false);
-    setNewProgramName("");
-  };
-
-  const handleAddCourse = () => {
-    const trimmed = newCourseName.trim();
-    if (!program) {
-      alert("Please select a program first.");
-      return;
-    }
-    if (trimmed && !courseOptions[program]?.includes(trimmed)) {
-      setCourseOptions((prev) => ({
-        ...prev,
-        [program]: [...(prev[program] || []), trimmed],
-      }));
-      setCourse(trimmed);
-    }
-    setShowAddCourse(false);
-    setNewCourseName("");
+    onClose();
   };
 
   if (!visible) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white p-6 rounded-md shadow-md w-96 relative">
+      <div className="bg-white p-6 rounded-md shadow-md w-96">
         <h2 className="text-xl font-semibold mb-4">
           {initialData ? "Edit Instructor" : "Assign Instructor"}
         </h2>
 
-        <input
-          className={`w-full border p-2 mb-1 rounded ${
-            errors.name ? "border-red-500 border-2" : "border"
+        {/* Name Dropdown */}
+        <select
+          className={`w-full border p-2 rounded mb-2 ${
+            errors.name ? "border-red-500 border-2" : ""
           }`}
-          placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-        />
-        {errors.name && (
-          <p className="text-red-500 text-sm mb-2">{errors.name}</p>
-        )}
+        >
+          <option value="">Assign Instructor</option>
+          {nameOptions.map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+        {errors.name && <p className="text-red-500 text-sm mb-2">{errors.name}</p>}
 
-        <div className="flex justify-between gap-4 mb-2">
-          <div className="flex-1">
+        <div className="flex gap-4 mb-2">
+          <div className="w-1/2">
             <label className="block text-sm font-medium mb-1">Start Time</label>
             <input
               type="time"
               className={`w-full border p-2 rounded ${
-                errors.startTime ? "border-red-500 border-2" : "border"
+                errors.startTime ? "border-red-500 border-2" : ""
               }`}
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
             />
           </div>
-          <div className="flex-1">
+          <div className="w-1/2">
             <label className="block text-sm font-medium mb-1">End Time</label>
             <input
               type="time"
               className={`w-full border p-2 rounded ${
-                errors.endTime ? "border-red-500 border-2" : "border"
+                errors.endTime ? "border-red-500 border-2" : ""
               }`}
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
@@ -187,12 +142,13 @@ const InstructorModal = ({ visible, onClose, onSubmit, initialData }) => {
           </p>
         )}
 
-        <div className="mb-4 flex gap-4">
-          <div className="flex-1">
+        {/* Schedule & Year Level */}
+        <div className="flex gap-4 mb-2">
+          <div className="w-1/2">
             <label className="block text-sm font-medium mb-1">Schedule</label>
             <select
               className={`w-full border p-2 rounded ${
-                errors.schedule ? "border-red-500 border-2" : "border"
+                errors.scheduleSort ? "border-red-500 border-2" : ""
               }`}
               value={scheduleSort}
               onChange={(e) => setScheduleSort(e.target.value)}
@@ -202,11 +158,11 @@ const InstructorModal = ({ visible, onClose, onSubmit, initialData }) => {
               <option value="TTH">TTH</option>
             </select>
           </div>
-          <div className="flex-1">
+          <div className="w-1/2">
             <label className="block text-sm font-medium mb-1">Year Level</label>
             <select
               className={`w-full border p-2 rounded ${
-                errors.yearLevel ? "border-red-500 border-2" : "border"
+                errors.yearLevel ? "border-red-500 border-2" : ""
               }`}
               value={yearLevel}
               onChange={(e) => setYearLevel(e.target.value)}
@@ -220,35 +176,38 @@ const InstructorModal = ({ visible, onClose, onSubmit, initialData }) => {
           </div>
         </div>
 
+        {/* Program Dropdown */}
+        <label className="block text-sm font-medium mb-1">Program</label>
         <select
-          className={`w-full p-2 mb-1 rounded ${
-            errors.program ? "border-red-500 border-2" : "border"
+          className={`w-full border p-2 rounded mb-2 ${
+            errors.program ? "border-red-500 border-2" : ""
           }`}
           value={program}
-          onChange={(e) => handleProgramChange(e.target.value)}
+          onChange={(e) => {
+            setProgram(e.target.value);
+            setCourse("");
+          }}
         >
           <option value="">Select Program</option>
-          <optgroup label="Programs">
-            {programOptions.map((prog) => (
-              <option key={prog} value={prog}>
-                {prog}
-              </option>
-            ))}
-          </optgroup>
+          {programOptions.map((prog) => (
+            <option key={prog} value={prog}>
+              {prog}
+            </option>
+          ))}
         </select>
-        {errors.program && (
-          <p className="text-red-500 text-sm mb-2">{errors.program}</p>
-        )}
+        {errors.program && <p className="text-red-500 text-sm mb-2">{errors.program}</p>}
 
+        {/* Course Dropdown */}
+        <label className="block text-sm font-medium mb-1">Course</label>
         <select
-          className={`w-full p-2 mb-1 rounded ${
-            errors.course ? "border-red-500 border-2" : "border"
+          className={`w-full border p-2 rounded mb-4 ${
+            errors.course ? "border-red-500 border-2" : ""
           }`}
           value={course}
-          onChange={(e) => handleCourseChange(e.target.value)}
+          onChange={(e) => setCourse(e.target.value)}
           disabled={!program}
         >
-          <option value="">Select Subject</option>
+          <option value="">Select Course</option>
           {program &&
             courseOptions[program]?.map((c) => (
               <option key={c} value={c}>
@@ -256,11 +215,10 @@ const InstructorModal = ({ visible, onClose, onSubmit, initialData }) => {
               </option>
             ))}
         </select>
-        {errors.course && (
-          <p className="text-red-500 text-sm mb-4">{errors.course}</p>
-        )}
+        {errors.course && <p className="text-red-500 text-sm mb-2">{errors.course}</p>}
 
-        <div className="flex justify-end gap-2 mt-4">
+        {/* Buttons */}
+        <div className="flex justify-end gap-2">
           <button
             className="bg-gray-500 text-white px-4 py-2 rounded"
             onClick={() => {
@@ -271,70 +229,12 @@ const InstructorModal = ({ visible, onClose, onSubmit, initialData }) => {
             Cancel
           </button>
           <button
-            className="bg-blue-700 text-white px-4 py-2 rounded"
+            className="bg-blue-700 text-white font-medium px-6 py-2 rounded-md hover:bg-blue-800"
             onClick={handleSave}
           >
             {initialData ? "Update" : "Add"}
           </button>
         </div>
-
-        {showAddProgram && (
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-white p-4 shadow-md border rounded w-80 z-10">
-            <h3 className="font-bold mb-2">Add New Program</h3>
-            <input
-              className="w-full border p-2 mb-2 rounded"
-              placeholder="Program name"
-              value={newProgramName}
-              onChange={(e) => setNewProgramName(e.target.value)}
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                className="bg-blue-700 text-white px-3 py-1 rounded"
-                onClick={handleAddProgram}
-              >
-                Add
-              </button>
-              <button
-                className="bg-gray-400 text-white px-3 py-1 rounded"
-                onClick={() => {
-                  setShowAddProgram(false);
-                  setNewProgramName("");
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {showAddCourse && (
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-white p-4 shadow-md border rounded w-80 z-10">
-            <h3 className="font-bold mb-2">Add New Course</h3>
-            <input
-              className="w-full border p-2 mb-2 rounded"
-              placeholder="Course name"
-              value={newCourseName}
-              onChange={(e) => setNewCourseName(e.target.value)}
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                className="bg-blue-700 text-white px-3 py-1 rounded"
-                onClick={handleAddCourse}
-              >
-                Add
-              </button>
-              <button
-                className="bg-gray-400 text-white px-3 py-1 rounded"
-                onClick={() => {
-                  setShowAddCourse(false);
-                  setNewCourseName("");
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
